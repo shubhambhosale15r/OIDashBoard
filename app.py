@@ -4,9 +4,26 @@ import numpy as np
 from fyers_apiv3 import fyersModel
 import plotly.graph_objects as go
 from datetime import datetime
+import pytz  # Added for timezone handling
 from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(layout="wide")
+
+# ================= TIMEZONE CONFIG =================
+IST = pytz.timezone('Asia/Kolkata')  # Indian Standard Time
+
+def get_current_ist():
+    """Get current time in IST"""
+    return datetime.now(IST)
+
+def convert_to_ist(dt):
+    """Convert datetime to IST"""
+    if dt.tzinfo is None:
+        # If naive datetime, assume it's IST
+        return IST.localize(dt)
+    else:
+        # Convert from any timezone to IST
+        return dt.astimezone(IST)
 
 # ================= CONFIG PANEL =================
 st.sidebar.header("⚙️ Dashboard Settings")
@@ -24,7 +41,7 @@ MAX_HISTORY = st.sidebar.number_input(
 )
 
 REFRESH_MS = st.sidebar.number_input(
-    "Refresh Interval (ms)", 5000, 120000, 60000
+    "Refresh Interval (ms)", 300000, 60000
 )
 
 # ----- Validate Credentials -----
@@ -42,13 +59,19 @@ fyers = fyersModel.FyersModel(
     is_async=False
 )
 
-st.title("🏦 Dealer Positioning Dashboard")
+st.title("🏦 Dealer Positioning Dashboard (IST Timezone)")
 
 if "history" in st.session_state and len(st.session_state.history) > 0:
     last_refresh = st.session_state.history[-1]["time"]
+    # Ensure time is in IST
+    last_refresh_ist = convert_to_ist(last_refresh)
     col1, col2 = st.columns(2) 
-    col1.caption(f"🕒 Last Refresh: {last_refresh.strftime('%H:%M:%S')}")
+    col1.caption(f"🕒 Last Refresh (IST): {last_refresh_ist.strftime('%H:%M:%S')}")
     col2.caption(f"🔄 Auto Refresh: {REFRESH_MS//1000} sec")
+
+# Display current IST time
+current_ist = get_current_ist()
+st.sidebar.caption(f"🕐 Current IST Time: {current_ist.strftime('%H:%M:%S')}")
 
 if "history" not in st.session_state:
     st.session_state.history = []
@@ -171,8 +194,10 @@ else:
 distance = spot - mp
 
 # ----- STORE HISTORY -----
+# Store timestamp in IST
+current_time_ist = get_current_ist()
 st.session_state.history.append({
-    "time": datetime.now(),
+    "time": current_time_ist,  # Now in IST
     "spot": spot,
     "mp": mp,
     "velocity": velocity,
@@ -188,8 +213,6 @@ comfort, flow_bias, speed = positioning_snapshot(
     spot, mp, net_build, velocity
 )
 
-# st.subheader("🏦 Dealer Positioning Snapshot")
-
 c1, c2, c3, c4 = st.columns(4)
 
 price_status = "🟢 Above MP" if spot > mp else "🔴 Below MP"
@@ -199,7 +222,7 @@ c2.metric("Comfort Level", comfort)
 c3.metric("Flow Bias", flow_bias)
 c4.metric("Reposition Speed", speed)
 
-c1, c2, c3 ,c4 = st.columns(4)
+c1, c2, c3, c4 = st.columns(4)
 
 c1.metric("Dealer Support", support)
 c2.metric("Dealer Resistance", resistance)
@@ -212,14 +235,27 @@ st.divider()
 # ================= CHART =================
 fig = go.Figure()
 
+# Ensure times in history are displayed in IST format
+hist_display = hist.copy()
+# Convert times to string format for display
+hist_display["time_display"] = hist_display["time"].apply(
+    lambda x: convert_to_ist(x).strftime('%H:%M:%S')
+)
+
 fig.add_trace(go.Scatter(x=hist["time"], y=hist["spot"], name="Spot"))
 fig.add_trace(go.Scatter(x=hist["time"], y=hist["mp"], name="Flow MP"))
 
 fig.add_hline(y=support, line_dash="dot")
 fig.add_hline(y=resistance, line_dash="dot")
 
+# Update layout with IST timezone info
 fig.update_layout(
-    title=f"Spot: {round(spot,2)} | Flow MP: {mp}"
+    title=f"Spot: {round(spot,2)} | Flow MP: {mp} (IST Timezone)",
+    xaxis_title="Time (IST)",
+    xaxis=dict(
+        tickformat='%H:%M:%S',
+        title="Time (IST)"
+    )
 )
 fig.update_layout(template="plotly_dark")
 
