@@ -41,7 +41,7 @@ MAX_HISTORY = st.sidebar.number_input(
 )
 
 REFRESH_MS = st.sidebar.number_input(
-    "Refresh Interval (ms)", 5000, 120000, 60000
+    "Refresh Interval (ms)", 300000, 60000
 )
 
 # ----- Validate Credentials -----
@@ -61,24 +61,7 @@ fyers = fyersModel.FyersModel(
 
 st.title("🏦 Dealer Positioning Dashboard (IST Timezone)")
 
-# ===== LAST REFRESH DISPLAY =====
-if "history" in st.session_state and len(st.session_state.history) > 0:
-    last_refresh = st.session_state.history[-1]["time"]
-    # Ensure time is in IST
-    last_refresh_ist = convert_to_ist(last_refresh)
-    col1, col2 = st.columns(2) 
-    col1.caption(f"🕒 Last Refresh (IST): {last_refresh_ist.strftime('%H:%M:%S')}")
-    col2.caption(f"🔄 Auto Refresh: {REFRESH_MS//1000} sec")
-else:
-    # Show initial message if no history yet
-    col1, col2 = st.columns(2)
-    col1.caption("🕒 Last Refresh (IST): Waiting for first data...")
-    col2.caption(f"🔄 Auto Refresh: {REFRESH_MS//1000} sec")
-
-# Display current IST time
-current_ist = get_current_ist()
-st.sidebar.caption(f"🕐 Current IST Time: {current_ist.strftime('%H:%M:%S')}")
-
+# Initialize history if not exists
 if "history" not in st.session_state:
     st.session_state.history = []
 
@@ -213,6 +196,25 @@ st.session_state.history.append({
 
 st.session_state.history = st.session_state.history[-MAX_HISTORY:]
 hist = pd.DataFrame(st.session_state.history)
+
+# ===== LAST REFRESH DISPLAY =====
+# NOW display the refresh time AFTER updating history
+if len(st.session_state.history) > 0:
+    last_refresh = st.session_state.history[-1]["time"]
+    # Ensure time is in IST
+    last_refresh_ist = convert_to_ist(last_refresh)
+    col1, col2 = st.columns(2) 
+    col1.caption(f"🕒 Last Refresh (IST): {last_refresh_ist.strftime('%H:%M:%S')}")
+    col2.caption(f"🔄 Auto Refresh: {REFRESH_MS//1000} sec")
+else:
+    # This should never happen now, but keep as fallback
+    col1, col2 = st.columns(2)
+    col1.caption("🕒 Last Refresh (IST): Just fetched data...")
+    col2.caption(f"🔄 Auto Refresh: {REFRESH_MS//1000} sec")
+
+# Display current IST time
+current_ist = get_current_ist()
+st.sidebar.caption(f"🕐 Current IST Time: {current_ist.strftime('%H:%M:%S')}")
 
 # ================= SNAPSHOT PANEL =================
 comfort, flow_bias, speed = positioning_snapshot(
