@@ -59,7 +59,7 @@ fyers = fyersModel.FyersModel(
     is_async=False
 )
 
-st.title("🏦 Dealer Positioning Dashboard (IST Timezone)")
+st.title("🏦 Dealer Positioning Dashboard")
 
 # Initialize history if not exists
 if "history" not in st.session_state:
@@ -289,3 +289,4 @@ st.dataframe(
     ].sort_values("strike_price", ascending=False),
     width='stretch'
 )
+
