@@ -41,7 +41,7 @@ MAX_HISTORY = st.sidebar.number_input(
 )
 
 REFRESH_MS = st.sidebar.number_input(
-    "Refresh Interval (ms)", 300000, 60000
+    "Refresh Interval (ms)", 5000, 600000, 300000
 )
 
 # ----- Validate Credentials -----
