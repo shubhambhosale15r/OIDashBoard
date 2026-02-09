@@ -41,7 +41,7 @@ MAX_HISTORY = st.sidebar.number_input(
 )
 
 REFRESH_MS = st.sidebar.number_input(
-    "Refresh Interval (ms)", 300000, 60000
+    "Refresh Interval (ms)", 5000, 120000, 60000
 )
 
 # ----- Validate Credentials -----
@@ -61,12 +61,18 @@ fyers = fyersModel.FyersModel(
 
 st.title("🏦 Dealer Positioning Dashboard (IST Timezone)")
 
+# ===== LAST REFRESH DISPLAY =====
 if "history" in st.session_state and len(st.session_state.history) > 0:
     last_refresh = st.session_state.history[-1]["time"]
     # Ensure time is in IST
     last_refresh_ist = convert_to_ist(last_refresh)
     col1, col2 = st.columns(2) 
     col1.caption(f"🕒 Last Refresh (IST): {last_refresh_ist.strftime('%H:%M:%S')}")
+    col2.caption(f"🔄 Auto Refresh: {REFRESH_MS//1000} sec")
+else:
+    # Show initial message if no history yet
+    col1, col2 = st.columns(2)
+    col1.caption("🕒 Last Refresh (IST): Waiting for first data...")
     col2.caption(f"🔄 Auto Refresh: {REFRESH_MS//1000} sec")
 
 # Display current IST time
@@ -259,7 +265,8 @@ fig.update_layout(
 )
 fig.update_layout(template="plotly_dark")
 
-st.plotly_chart(fig, use_container_width=True)
+# Updated: use width='stretch' instead of use_container_width=True
+st.plotly_chart(fig, width='stretch')
 
 # ================= LADDER =================
 st.subheader("🪜 Strike Flow Ladder")
@@ -268,6 +275,7 @@ ladder_df = opt_df.copy()
 
 ladder_df["Net_Build"] = ladder_df["Build_PE"] - ladder_df["Build_CE"]
 
+# Updated: use width='stretch' instead of use_container_width=True
 st.dataframe(
     ladder_df[
         ["strike_price",
@@ -277,5 +285,5 @@ st.dataframe(
          "Unwind_PE",
          "Net_Build"]
     ].sort_values("strike_price", ascending=False),
-    use_container_width=True
+    width='stretch'
 )
