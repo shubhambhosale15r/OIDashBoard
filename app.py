@@ -37,7 +37,7 @@ STRIKE_COUNT = st.sidebar.number_input(
 )
 
 MAX_HISTORY = st.sidebar.number_input(
-    "History Points", 50, 1000, 300
+    "History Points", 50, 1000, 1000
 )
 
 REFRESH_MS = st.sidebar.number_input(
@@ -289,4 +289,5 @@ st.dataframe(
     ].sort_values("strike_price", ascending=False),
     width='stretch'
 )
+
 
