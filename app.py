@@ -228,6 +228,17 @@ price_status = "🟢 Above MP" if spot > mp else "🔴 Below MP"
 c1.metric("Underlying LTP", round(spot, 2), price_status)
 c2.metric("Comfort Level", comfort)
 c3.metric("Flow Bias", flow_bias)
+d1 = abs(resistance - mp)
+d2 = abs(support - mp)
+d = d1 -d2
+r = ""
+if d > 0 :
+    r = "BUllish"
+elif d < 0 :
+    r = "bearish"
+else :
+    r = "Neutral"
+c4.metric("Trend ",r)
 # c4.metric("Reposition Speed", speed)
 
 c1, c2, c3, c4 = st.columns(4)
@@ -289,6 +300,7 @@ st.dataframe(
     ].sort_values("strike_price", ascending=False),
     width='stretch'
 )
+
 
 
 
