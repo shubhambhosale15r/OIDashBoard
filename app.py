@@ -146,12 +146,12 @@ def positioning_snapshot(spot, mp, net_build, velocity):
     else:
         flow_bias = "Balanced"
 
-    if abs(velocity) > 50:
-        speed = "Aggressive Reposition"
-    elif abs(velocity) > 10:
-        speed = "Moderate"
+    if abs(velocity) > 0:
+        speed = "Up"
+    elif abs(velocity) < 0:
+        speed = "Down"
     else:
-        speed = "Passive"
+        speed = "Neutral"
 
     return comfort, flow_bias, speed
 
@@ -232,10 +232,10 @@ d1 = abs(resistance - mp)
 d2 = abs(support - mp)
 d = d1 -d2
 r = ""
-if d > 0 :
-    r = "BUllish"
-elif d < 0 :
-    r = "bearish"
+if flow_bias == 'Put Writing Dominant' and velocity > 0 :
+    r = "Bullish"
+elif flow_bias == 'Call Writing Dominant' and velocity > 0 :
+    r = "Bearish"
 else :
     r = "Neutral"
 c4.metric("Trend ",r)
@@ -300,6 +300,7 @@ st.dataframe(
     ].sort_values("strike_price", ascending=False),
     width='stretch'
 )
+
 
 
 
